@@ -28,7 +28,7 @@ export async function GET(request) {
         // ПЕРЕДАЕМ ТОКЕН АВТОРИЗАЦИИ ИЗ ДОКУМЕНТАЦИИ
         'X-API-KEY': apiKey 
       },
-      next: { revalidate: 10 } 
+      next: { revalidate: 120 } 
     });
 
     if (!response.ok) {
