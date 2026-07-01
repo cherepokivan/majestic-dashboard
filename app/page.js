@@ -1,189 +1,131 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 
-const CATEGORIES = [
-  { id: 'mansions', name: 'Особняки', path: 'mansions' },
-  { id: 'multipurpose', name: 'ПСН', path: 'multipurpose' },
-  { id: 'dmv-cameras', name: 'DMV Камеры', path: 'dmv-cameras' },
-  { id: 'captures', name: 'Капты', path: 'captures' },
-  { id: 'family-wars', name: 'Войны семей', path: 'family-wars' },
-  { id: 'arena', name: 'Арена', path: 'arena' },
-  { id: 'rating-organizations', name: 'Рейтинг организаций', path: 'rating-organizations' },
-  { id: 'mp_cars', name: 'МП: Транспорт', path: 'marketplace/cars' },
-  { id: 'mp_items', name: 'МП: Предметы', path: 'marketplace/items' },
-  { id: 'mp_houses', name: 'МП: Дома', path: 'marketplace/houses' },
-  { id: 'mp_apartments', name: 'МП: Квартиры', path: 'marketplace/apartments' },
-  { id: 'mp_offices', name: 'МП: Офисы', path: 'marketplace/offices' },
-  { id: 'mp_clothes', name: 'МП: Одежда', path: 'marketplace/clothes' },
-  { id: 'mp_adv', name: 'МП: Объявления', path: 'marketplace/advertisements' },
-];
-
-const SERVERS = [
-  { id: 'RU1', name: 'New York' }, { id: 'RU2', name: 'Detroit' },
-  { id: 'RU3', name: 'Chicago' }, { id: 'RU4', name: 'San Francisco' },
-  { id: 'RU5', name: 'Atlanta' }, { id: 'RU6', name: 'San Diego' },
-  { id: 'RU7', name: 'Los Angeles' }, { id: 'RU8', name: 'Miami' },
-  { id: 'RU9', name: 'Las Vegas' }, { id: 'RU10', name: 'Washington' },
-  { id: 'RU11', name: 'Dallas' }, { id: 'RU12', name: 'Boston' },
-];
-
-export default function Home() {
-  const [activeTab, setActiveTab] = useState(CATEGORIES[0]);
-  const [serverId, setServerId] = useState('RU1');
+export default function Dashboard() {
+  const [server, setServer] = useState('RU1');
+  const [activeTab, setActiveTab] = useState('mansions');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const tabs = [
+    { id: 'mansions', name: 'Особняки' },
+    { id: 'multipurpose', name: 'ПСН' },
+    { id: 'captures', name: 'Капты' },
+    { id: 'family-wars', name: 'Войны семей' },
+    { id: 'arena', name: 'Арена' },
+    { id: 'rating-organizations', name: 'Рейтинг фракций' },
+  ];
+
+  const servers = ['RU1', 'RU2', 'RU3', 'RU4', 'RU5', 'RU6', 'RU7', 'RU8', 'RU9', 'RU10', 'RU11', 'RU12'];
+
   useEffect(() => {
-    async function fetchTabData() {
+    async function fetchData() {
       setLoading(true);
       setError(null);
-      setData(null);
-
       try {
-        const response = await fetch(`/api/majestic?endpoint=${activeTab.path}/${serverId}`);
-        const result = await response.json();
-
-        if (result.error) throw new Error(result.error);
-
-        const dataKey = Object.keys(result).find(key => Array.isArray(result[key]));
+        const res = await fetch(`/api/majestic?endpoint=${activeTab}/${server}`);
+        const result = await res.json();
         
-        setData({
-          serverName: result.serverName,
-          lastUpdated: result.lastUpdated,
-          list: result[dataKey] || []
-        });
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        setData(result);
       } catch (err) {
-        setError(err.message || 'Не удалось загрузить данные');
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTabData();
-  }, [activeTab, serverId]);
-
-  const currentServerName = SERVERS.find(s => s.id === serverId)?.name || serverId;
+    fetchData();
+  }, [server, activeTab]);
 
   return (
-    <main className="min-h-screen bg-[#0F0F12] text-[#E0E0E6] font-sans antialiased flex flex-col justify-between">
-      <div>
-        <header className="border-b border-[#22222A] bg-[#14141B] p-6 sticky top-0 z-50 shadow-md">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="text-2xl font-black tracking-wider text-white">MAJESTIC <span className="text-[#E62E5C]">DASHBOARD</span></div>
-              <select value={serverId} onChange={(e) => setServerId(e.target.value)} className="bg-[#1C1C24] border border-[#333344] text-white px-3 py-1.5 rounded-lg text-sm font-bold focus:outline-none focus:border-[#E62E5C] cursor-pointer">
-                {SERVERS.map(s => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-              </select>
-            </div>
-            {data?.lastUpdated && (
-              <div className="text-xs text-gray-500 bg-[#1C1C24] px-3 py-1 rounded-full border border-[#22222A]">
-                Обновлено: {new Date(data.lastUpdated).toLocaleString('ru-RU')}
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-magenta-500 selection:text-white">
+      {/* Шапка сайта */}
+      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+          <h1 className="text-xl font-bold tracking-wider text-white uppercase">Majestic Dashboard</h1>
+        </div>
+        
+        {/* Выбор сервера */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-400">Сервер:</span>
+          <select 
+            value={server} 
+            onChange={(e) => setServer(e.target.value)}
+            className="bg-slate-800 text-white border border-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+          >
+            {servers.map(srv => (
+              <option key={srv} value={srv}>{srv}</option>
+            ))}
+          </select>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto p-6">
+        {/* Навигация по вкладкам */}
+        <div className="flex flex-wrap gap-2 mb-8 bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === tab.id 
+                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              {tab.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Контентная зона */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 min-h-[400px] flex flex-col justify-between shadow-xl">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+              {tabs.find(t => t.id === activeTab)?.name} <span className="text-red-500 text-lg">[{server}]</span>
+            </h2>
+
+            {/* ИНДИКАТОР ЗАГРУЗКИ */}
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+                <p className="text-slate-400 animate-pulse">Получение актуальных данных от Majestic API...</p>
+              </div>
+            )}
+
+            {/* ОШИБКА */}
+            {error && !loading && (
+              <div className="bg-red-950/40 border border-red-800/60 rounded-xl p-4 text-red-200 text-sm">
+                <div className="font-semibold text-base mb-1">⚠️ Ошибка синхронизации (fetch failed)</div>
+                <p className="text-red-300/80 mb-3">Сервер хостинга временно заблокирован защитой Cloudflare со стороны Majestic.</p>
+                <div className="bg-black/30 p-2.5 rounded font-mono text-xs text-red-400 break-all">
+                  Лог ошибки: {error}
+                </div>
+              </div>
+            )}
+
+            {/* ВЫВОД ДАННЫХ */}
+            {data && !loading && !error && (
+              <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 overflow-x-auto">
+                <pre className="text-emerald-400 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+                  {JSON.stringify(data, null, 2)}
+                </pre>
               </div>
             )}
           </div>
-        </header>
 
-        <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <aside className="lg:col-span-1 space-y-1 bg-[#14141B] p-4 rounded-xl border border-[#22222A] h-fit max-h-[85vh] overflow-y-auto custom-scrollbar">
-            <div className="text-xs font-bold text-gray-500 px-3 mb-2 uppercase tracking-wider">Разделы API</div>
-            {CATEGORIES.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab)} className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab.id === tab.id ? 'bg-[#E62E5C] text-white shadow-lg shadow-[#E62E5C]/20 font-bold' : 'text-gray-400 hover:bg-[#1C1C24] hover:text-white'}`}>
-                {tab.name}
-              </button>
-            ))}
-          </aside>
-
-          <section className="lg:col-span-3">
-            <div className="bg-[#14141B] rounded-xl border border-[#22222A] p-6 min-h-[600px] flex flex-col shadow-xl">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2 border-b border-[#22222A] pb-4">
-                <span>{activeTab.name}</span>
-                <span className="text-xs font-semibold text-[#E62E5C] bg-[#E62E5C]/10 px-2.5 py-0.5 rounded-full border border-[#E62E5C]/20">{currentServerName}</span>
-              </h2>
-
-              {loading && <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3"><div className="w-9 h-9 border-4 border-[#E62E5C] border-t-transparent rounded-full animate-spin"></div><p className="text-sm">Синхронизация данных...</p></div>}
-              {error && (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="bg-red-950/20 border border-red-900/50 text-red-400 p-6 rounded-xl text-sm max-w-md text-center">
-                    <p className="font-bold text-base mb-1">Ошибка получения данных</p>
-                    <p className="text-xs text-red-300/70 mb-4">Код: {error}</p>
-                    <p className="text-xs text-gray-400 text-left leading-relaxed">
-                      Если вы видите <code className="bg-black/40 px-1 py-0.5 rounded text-red-300">fetch failed</code> на Vercel, это означает, что Cloudflare/API Majestic блокирует IP-адреса хостинга. Скомпилируйте проект и запустите его локально через <code className="bg-black/40 px-1 py-0.5 rounded text-gray-300">npm run dev</code> на своём ПК — там блокировки не будет.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {!loading && !error && data && (
-                <div className="flex-1">
-                  {data.list.length === 0 ? <div className="text-gray-500 text-center py-24 text-sm">Данные на сервере временно пусты.</div> : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {data.list.map((item, index) => {
-                        const itemColor = item.familyMainColor || item.mainColor || '#2A2A35';
-                        return (
-                          <div key={index} className="bg-[#1C1C24] border border-[#2A2A35] p-4 rounded-xl flex flex-col justify-between hover:border-gray-700 transition-all duration-200" style={{ borderLeft: item.familyMainColor || item.mainColor ? `4px solid ${itemColor}` : '' }}>
-                            <div>
-                              {item.rank !== undefined && <div className="flex justify-between items-start mb-2"><div className="text-2xl font-black text-white bg-[#252530] w-10 h-10 rounded-lg flex items-center justify-center border border-[#333344]">#{item.rank}</div><div className="text-right text-xs"><p className="text-gray-500">Был ранг</p><p className="font-bold text-gray-300">#{item.prevRank || item.rank}</p></div></div>}
-                              {(activeTab.id === 'dmv-cameras' || item.cameraId) && !item.carModel && !item.itemName && item.rank === undefined && <p className="font-bold text-white text-lg mb-2">Камера #{item.cameraId || item.id || index + 1}</p>}
-                              {item.carModel && <p className="font-bold text-white text-lg tracking-tight">{item.carModel}</p>}
-                              {item.itemName && <p className="font-bold text-white text-lg tracking-tight">{item.itemName}</p>}
-                              {item.mansionName && <p className="font-bold text-white text-lg tracking-tight">{item.mansionName}</p>}
-                              {item.name && item.rank !== undefined && <p className="font-bold text-white text-lg tracking-tight">{item.name}</p>}
-                              {(item.houseId || item.apartmentId || item.officeId) && <p className="font-bold text-white text-lg">Имущество #{item.houseId || item.apartmentId || item.officeId}</p>}
-
-                              {item.attackersName && (
-                                <div className="mb-3 bg-[#252530] p-2.5 rounded-lg border border-[#333344] text-xs">
-                                  <div className="flex justify-between text-red-400"><span>Атака:</span><span className="text-white font-bold">{item.attackersName}</span></div>
-                                  <div className="text-center font-black text-gray-600 my-0.5">VS</div>
-                                  <div className="flex justify-between text-blue-400"><span>Защита:</span><span className="text-white font-bold">{item.defendersName}</span></div>
-                                  {item.selectedMapName && <p className="text-gray-400 mt-2 text-[11px]">Карта: <span className="text-gray-200">{item.selectedMapName}</span></p>}
-                                </div>
-                              )}
-
-                              {item.gamemode && <div className="flex justify-between items-center mb-2"><span className="px-2 py-0.5 rounded text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold uppercase">{item.gamemode}</span><span className={`text-xs font-bold ${item.status === 'Finished' ? 'text-gray-500' : 'text-green-400 animate-pulse'}`}>{item.status === 'Finished' ? 'Завершен' : 'В игре'}</span></div>}
-
-                              <div className="mt-2 space-y-1 text-xs text-gray-400">
-                                {item.zoneId && <p>Зона: <span className="text-gray-200">#{item.zoneId}</span></p>}
-                                {item.gangZoneId && <p>Квадрат капта: <span className="text-gray-200">#{item.gangZoneId}</span></p>}
-                                {(item.maxSpeed || item.speedLimit) && <p>Ограничение: <span className="text-yellow-400 font-bold">{item.maxSpeed || item.speedLimit} км/ч</span></p>}
-                                {item.penalty && <p>Штраф: <span className="text-red-400">${item.penalty.toLocaleString()}</span></p>}
-                                {item.creatorLogin && <p>Хост: <span className="text-gray-200">{item.creatorLogin}</span></p>}
-                                {item.influence && <p>Влияние фракции: <span className="text-yellow-400 font-bold">{item.influence.toLocaleString()}</span></p>}
-                                {item.count !== undefined && <p>Количество: <span className="text-gray-200">{item.count} шт.</span></p>}
-                                {item.bank !== undefined && <p>Призовой банк: <span className="text-green-400 font-bold">${item.bank.toLocaleString()}</span></p>}
-                                {item.minPrice && <p>Мин. цена: <span className="text-[#E62E5C] font-bold">${item.minPrice.toLocaleString()}</span></p>}
-                                {item.avgPrice && <p>Средняя цена: <span className="text-green-400 font-semibold">${item.avgPrice.toLocaleString()}</span></p>}
-                                {item.startAt && <p>Время старта: <span className="text-gray-400">{new Date(item.startAt).toLocaleTimeString('ru-RU')}</span></p>}
-                              </div>
-                            </div>
-
-                            {(item.familyTag || item.tag) && (
-                              <div className="mt-4 pt-3 border-t border-[#22222A] flex justify-between items-center text-xs">
-                                <span className="text-gray-500">Контроль:</span>
-                                <span className="px-2 py-0.5 rounded font-bold border" style={{ backgroundColor: (item.familyMainColor || item.mainColor) ? `${itemColor}15` : '#22222A', borderColor: (item.familyMainColor || item.mainColor) ? `${itemColor}40` : '#333344', color: (item.familyMainColor || item.mainColor) ? itemColor : '#FFF' }}>
-                                  [{item.familyTag || item.tag}] {item.familyName || ''}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
+          {/* Подвал карточки */}
+          <footer className="mt-8 pt-4 border-t border-slate-800 text-xs text-slate-500 flex flex-wrap justify-between items-center gap-2">
+            <div>Лимит запросов к API: 5 запросов / 60 сек</div>
+            <div>Данные обновляются в реальном времени</div>
+          </footer>
         </div>
-      </div>
-
-      <footer className="w-full text-center py-6 border-t border-[#1C1C24] bg-[#14141B] text-xs text-gray-500 mt-12">
-        <div className="max-w-7xl mx-auto px-6">
-          Информация взята с сайта <a href="https://majestic-rp.ru" target="_blank" rel="noopener noreferrer" className="text-[#E62E5C] hover:underline font-semibold">majestic-rp.ru</a>
-        </div>
-      </footer>
-    </main>
+      </main>
+    </div>
   );
-    }
-            
+              }
